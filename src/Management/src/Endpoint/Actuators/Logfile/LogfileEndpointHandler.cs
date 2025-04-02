@@ -36,7 +36,8 @@ public sealed class LogfileEndpointHandler : ILogfileEndpointHandler
 
         if (!string.IsNullOrEmpty(_optionsMonitor.CurrentValue.FilePath))
         {
-            return Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly()!.Location)!, _optionsMonitor.CurrentValue.FilePath ?? string.Empty);
+            string entryAssemblyDirectory = Path.GetDirectoryName(Assembly.GetEntryAssembly()!.Location)!;
+            return Path.Combine(entryAssemblyDirectory, _optionsMonitor.CurrentValue.FilePath ?? string.Empty);
         }
 
         _logger.LogWarning("File path is not set");
