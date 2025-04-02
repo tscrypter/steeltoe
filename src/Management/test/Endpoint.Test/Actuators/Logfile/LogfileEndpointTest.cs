@@ -5,6 +5,7 @@
 using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Steeltoe.Common.TestResources.IO;
 using Steeltoe.Management.Configuration;
 using Steeltoe.Management.Endpoint.Actuators.Logfile;
 using Xunit.Abstractions;
@@ -156,5 +157,41 @@ public sealed class LogfileEndpointTest(ITestOutputHelper testOutputHelper) : Ba
         options.FilePath.Should().Be("logs/testfile.log");
         options.AllowedVerbs.Should().Contain("Get");
         options.AllowedVerbs.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task Invoke_ReturnsExpected()
+    {
+        // arrange
+        const string expectedLogFileContents = "This is a test log file content.";
+        using TempFile tempLogFile = new TempFile();
+        await File.WriteAllTextAsync(tempLogFile.FullPath, expectedLogFileContents);
+        var appSettings = new Dictionary<string, string?>
+        {
+            ["management:endpoints:logfile:filePath"] = tempLogFile.FullPath,
+            ["management:endpoints:logfile:enabled"] = "true"
+        };
+
+        using var testContext = new TestContext(_testOutputHelper);
+
+        testContext.AdditionalConfiguration = configuration =>
+        {
+            configuration.AddInMemoryCollection(appSettings);
+        };
+
+        testContext.AdditionalServices = (services, _) =>
+        {
+            services.AddSingleton(TestHostEnvironmentFactory.Create());
+            services.ConfigureEndpointOptions<LogfileEndpointOptions, ConfigureLogfileEndpointOptions>();
+            services.AddSingleton<ILogfileEndpointHandler, LogfileEndpointHandler>();
+        };
+
+        var handler = (LogfileEndpointHandler)testContext.GetRequiredService<ILogfileEndpointHandler>();
+
+        // act
+        string logFileContents = await handler.InvokeAsync("an object", CancellationToken.None);
+
+        // assert
+        logFileContents.Should().Be(expectedLogFileContents);
     }
 }
