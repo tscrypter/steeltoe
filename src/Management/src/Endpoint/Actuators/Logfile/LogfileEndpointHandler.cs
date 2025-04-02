@@ -32,7 +32,14 @@ public sealed class LogfileEndpointHandler : ILogfileEndpointHandler
 
         string logFilePath = GetLogFilePath();
 
-        return await File.ReadAllTextAsync(logFilePath, cancellationToken: cancellationToken);
+        if (!string.IsNullOrEmpty(logFilePath))
+        {
+            return await File.ReadAllTextAsync(logFilePath, cancellationToken: cancellationToken);
+        }
+
+        _logger.LogWarning("Log file path is not set");
+        return string.Empty;
+
     }
 
     internal string GetLogFilePath()
