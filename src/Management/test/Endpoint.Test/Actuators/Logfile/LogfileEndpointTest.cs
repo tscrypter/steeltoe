@@ -20,10 +20,46 @@ public sealed class LogfileEndpointTest(ITestOutputHelper testOutputHelper) : Ba
     public void GetLogFilePathWithRelativePath_ReturnsExpected()
     {
         // arrange
-        string expectedFilePath = Path.Combine(Assembly.GetEntryAssembly()!.Location, "logs/testfile.log");
+        string directoryName = Path.GetDirectoryName(Assembly.GetEntryAssembly()!.Location)!;
+        string expectedFilePath = Path.Combine(directoryName, "logs/testfile.log");
         var appSettings = new Dictionary<string, string?>
         {
             ["management:endpoints:logfile:filePath"] = "logs/testfile.log",
+            ["management:endpoints:logfile:enabled"] = "true"
+        };
+
+        using var testContext = new TestContext(_testOutputHelper);
+
+        testContext.AdditionalConfiguration = configuration =>
+        {
+            configuration.AddInMemoryCollection(appSettings);
+        };
+
+        testContext.AdditionalServices = (services, _) =>
+        {
+            services.AddSingleton(TestHostEnvironmentFactory.Create());
+            services.ConfigureEndpointOptions<LogfileEndpointOptions, ConfigureLogfileEndpointOptions>();
+            services.AddSingleton<ILogfileEndpointHandler, LogfileEndpointHandler>();
+        };
+
+        var handler = (LogfileEndpointHandler)testContext.GetRequiredService<ILogfileEndpointHandler>();
+
+        // act
+        string result = handler.GetLogFilePath();
+
+        // assert
+        Assert.NotNull(result);
+        Assert.Equal(expectedFilePath, result);
+    }
+
+    [Fact]
+    public void GetLogFilePathWithAbsolutePath_ReturnsExpected()
+    {
+        // arrange
+        const string expectedFilePath = "/logs/testfile.log";
+        var appSettings = new Dictionary<string, string?>
+        {
+            ["management:endpoints:logfile:filePath"] = expectedFilePath,
             ["management:endpoints:logfile:enabled"] = "true"
         };
 
