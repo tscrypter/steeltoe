@@ -194,4 +194,36 @@ public sealed class LogfileEndpointTest(ITestOutputHelper testOutputHelper) : Ba
         // assert
         logFileContents.Should().Be(expectedLogFileContents);
     }
+    
+    [Fact]
+    public async Task Invoke_ReturnsEmptyStringWhenNoLogFileSpecified()
+    {
+        // arrange
+        var appSettings = new Dictionary<string, string?>
+        {
+            ["management:endpoints:logfile:enabled"] = "true"
+        };
+
+        using var testContext = new TestContext(_testOutputHelper);
+
+        testContext.AdditionalConfiguration = configuration =>
+        {
+            configuration.AddInMemoryCollection(appSettings);
+        };
+
+        testContext.AdditionalServices = (services, _) =>
+        {
+            services.AddSingleton(TestHostEnvironmentFactory.Create());
+            services.ConfigureEndpointOptions<LogfileEndpointOptions, ConfigureLogfileEndpointOptions>();
+            services.AddSingleton<ILogfileEndpointHandler, LogfileEndpointHandler>();
+        };
+
+        var handler = (LogfileEndpointHandler)testContext.GetRequiredService<ILogfileEndpointHandler>();
+
+        // act
+        string logFileContents = await handler.InvokeAsync("an object", CancellationToken.None);
+
+        // assert
+        logFileContents.Should().Be(string.Empty);
+    }
 }
