@@ -6,6 +6,7 @@ using System.Reflection;
 using Microsoft.AspNetCore.Routing.Matching;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Steeltoe.Management.Endpoint.Actuators.Logfile;
 using Xunit.Abstractions;
 
 namespace Steeltoe.Management.Endpoint.Test.Actuators.Logfile;
@@ -30,7 +31,7 @@ public sealed class LogfileEndpointTest(ITestOutputHelper testOutputHelper) : Ba
         testContext.AdditionalServices = (services, _) =>
         {
             services.AddSingleton(TestHostEnvironmentFactory.Create());
-            services.AddLogfileActuator();
+            services.AddSingleton<ILogfileEndpointHandler, LogfileEndpointHandler>();
         };
 
         testContext.AdditionalConfiguration = configuration =>
