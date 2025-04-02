@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Reflection;
-using Microsoft.AspNetCore.Routing.Matching;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Steeltoe.Management.Configuration;
@@ -17,7 +16,7 @@ public sealed class LogfileEndpointTest(ITestOutputHelper testOutputHelper) : Ba
     private readonly ITestOutputHelper _testOutputHelper = testOutputHelper;
 
     [Fact]
-    public void GetLogFilePathWithRelativePath_ReturnsExpected()
+    public void GetLogFilePathWithRelativePath_ReturnsPathRelativeToEntryAssemblyDirectory()
     {
         // arrange
         string directoryName = Path.GetDirectoryName(Assembly.GetEntryAssembly()!.Location)!;
@@ -53,13 +52,47 @@ public sealed class LogfileEndpointTest(ITestOutputHelper testOutputHelper) : Ba
     }
 
     [Fact]
-    public void GetLogFilePathWithAbsolutePath_ReturnsExpected()
+    public void GetLogFilePathWithAbsolutePath_ReturnsAbsolutePath()
     {
         // arrange
         const string expectedFilePath = "/logs/testfile.log";
         var appSettings = new Dictionary<string, string?>
         {
             ["management:endpoints:logfile:filePath"] = expectedFilePath,
+            ["management:endpoints:logfile:enabled"] = "true"
+        };
+
+        using var testContext = new TestContext(_testOutputHelper);
+
+        testContext.AdditionalConfiguration = configuration =>
+        {
+            configuration.AddInMemoryCollection(appSettings);
+        };
+
+        testContext.AdditionalServices = (services, _) =>
+        {
+            services.AddSingleton(TestHostEnvironmentFactory.Create());
+            services.ConfigureEndpointOptions<LogfileEndpointOptions, ConfigureLogfileEndpointOptions>();
+            services.AddSingleton<ILogfileEndpointHandler, LogfileEndpointHandler>();
+        };
+
+        var handler = (LogfileEndpointHandler)testContext.GetRequiredService<ILogfileEndpointHandler>();
+
+        // act
+        string result = handler.GetLogFilePath();
+
+        // assert
+        Assert.NotNull(result);
+        Assert.Equal(expectedFilePath, result);
+    }
+
+    [Fact]
+    public void GetLogFilePathWithNoConfig_ReturnsEmptyString()
+    {
+        // arrange
+        string expectedFilePath = string.Empty;
+        var appSettings = new Dictionary<string, string?>
+        {
             ["management:endpoints:logfile:enabled"] = "true"
         };
 
