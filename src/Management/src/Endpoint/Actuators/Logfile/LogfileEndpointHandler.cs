@@ -3,21 +3,36 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Reflection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Steeltoe.Management.Configuration;
 
 namespace Steeltoe.Management.Endpoint.Actuators.Logfile;
 
-public class LogfileEndpointHandler : ILogfileEndpointHandler
+public sealed class LogfileEndpointHandler : ILogfileEndpointHandler
 {
+    private readonly IOptionsMonitor<LogfileEndpointOptions> _optionsMonitor;
+    private readonly ILogger<LogfileEndpointHandler> _logger;
+
+    public LogfileEndpointHandler(IOptionsMonitor<LogfileEndpointOptions> optionsMonitorMonitor, ILoggerFactory loggerFactory)
+    {
+        ArgumentNullException.ThrowIfNull(optionsMonitorMonitor);
+        ArgumentNullException.ThrowIfNull(loggerFactory);
+
+        _optionsMonitor = optionsMonitorMonitor;
+        _logger = loggerFactory.CreateLogger<LogfileEndpointHandler>();
+    }
+
     public EndpointOptions Options => throw new NotImplementedException();
 
-    public async Task<string> InvokeAsync(object? argument, CancellationToken cancellationToken)
+    public Task<string> InvokeAsync(object? argument, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
     internal string GetLogFilePath()
     {
-        return Path.Combine(Assembly.GetEntryAssembly().Location, "logs/testfile.log");
+        _logger.LogTrace("Getting log file path");
+        return Path.Combine(Assembly.GetEntryAssembly()!.Location, _optionsMonitor.CurrentValue.FilePath ?? string.Empty);
     }
 }

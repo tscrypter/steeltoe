@@ -28,15 +28,16 @@ public sealed class LogfileEndpointTest(ITestOutputHelper testOutputHelper) : Ba
 
         using var testContext = new TestContext(_testOutputHelper);
 
-        testContext.AdditionalServices = (services, _) =>
-        {
-            services.AddSingleton(TestHostEnvironmentFactory.Create());
-            services.AddSingleton<ILogfileEndpointHandler, LogfileEndpointHandler>();
-        };
-
         testContext.AdditionalConfiguration = configuration =>
         {
             configuration.AddInMemoryCollection(appSettings);
+        };
+
+        testContext.AdditionalServices = (services, _) =>
+        {
+            services.AddSingleton(TestHostEnvironmentFactory.Create());
+            services.ConfigureEndpointOptions<LogfileEndpointOptions, ConfigureLogfileEndpointOptions>();
+            services.AddSingleton<ILogfileEndpointHandler, LogfileEndpointHandler>();
         };
 
         var handler = (LogfileEndpointHandler)testContext.GetRequiredService<ILogfileEndpointHandler>();
