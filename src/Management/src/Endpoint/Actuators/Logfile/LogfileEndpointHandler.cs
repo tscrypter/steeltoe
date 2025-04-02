@@ -25,9 +25,14 @@ public sealed class LogfileEndpointHandler : ILogfileEndpointHandler
 
     public EndpointOptions Options => _optionsMonitor.CurrentValue;
 
-    public Task<string> InvokeAsync(object? argument, CancellationToken cancellationToken)
+    public async Task<string> InvokeAsync(object? argument, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        _logger.LogTrace("Invoking LogfileEndpointHandler with argument: {Argument}", argument);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        string logFilePath = GetLogFilePath();
+
+        return await File.ReadAllTextAsync(logFilePath, cancellationToken: cancellationToken);
     }
 
     internal string GetLogFilePath()
