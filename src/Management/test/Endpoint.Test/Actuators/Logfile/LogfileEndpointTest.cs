@@ -6,6 +6,7 @@ using System.Reflection;
 using Microsoft.AspNetCore.Routing.Matching;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Steeltoe.Management.Configuration;
 using Steeltoe.Management.Endpoint.Actuators.Logfile;
 using Xunit.Abstractions;
 
@@ -48,5 +49,43 @@ public sealed class LogfileEndpointTest(ITestOutputHelper testOutputHelper) : Ba
         // assert
         Assert.NotNull(result);
         Assert.Equal(expectedFilePath, result);
+    }
+
+    [Fact]
+    public void Options_ReturnsExpected()
+    {
+        // arrange
+        var appSettings = new Dictionary<string, string?>
+        {
+            ["management:endpoints:logfile:filePath"] = "logs/testfile.log",
+            ["management:endpoints:logfile:enabled"] = "true"
+        };
+
+        using var testContext = new TestContext(_testOutputHelper);
+
+        testContext.AdditionalConfiguration = configuration =>
+        {
+            configuration.AddInMemoryCollection(appSettings);
+        };
+
+        testContext.AdditionalServices = (services, _) =>
+        {
+            services.AddSingleton(TestHostEnvironmentFactory.Create());
+            services.ConfigureEndpointOptions<LogfileEndpointOptions, ConfigureLogfileEndpointOptions>();
+            services.AddSingleton<ILogfileEndpointHandler, LogfileEndpointHandler>();
+        };
+
+        var handler = (LogfileEndpointHandler)testContext.GetRequiredService<ILogfileEndpointHandler>();
+
+        // act
+        LogfileEndpointOptions options = (handler.Options as LogfileEndpointOptions)!;
+
+        // assert
+        options.Id.Should().Be("logfile");
+        options.RequiredPermissions.Should().Be(EndpointPermissions.Restricted);
+        options.Path.Should().Be("logfile");
+        options.FilePath.Should().Be("logs/testfile.log");
+        options.AllowedVerbs.Should().Contain("Get");
+        options.AllowedVerbs.Should().HaveCount(1);
     }
 }

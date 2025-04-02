@@ -23,7 +23,7 @@ public sealed class LogfileEndpointHandler : ILogfileEndpointHandler
         _logger = loggerFactory.CreateLogger<LogfileEndpointHandler>();
     }
 
-    public EndpointOptions Options => throw new NotImplementedException();
+    public EndpointOptions Options => _optionsMonitor.CurrentValue;
 
     public Task<string> InvokeAsync(object? argument, CancellationToken cancellationToken)
     {
