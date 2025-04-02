@@ -7,7 +7,7 @@ using Steeltoe.Management.Endpoint.Actuators.Logfile;
 
 namespace Steeltoe.Management.Endpoint.Test.Actuators.Logfile;
 
-public class LogfileEndpointOptionsTest : BaseTest
+public sealed class LogfileEndpointOptionsTest : BaseTest
 {
     [Fact]
     public void AppliesDefaults()
@@ -25,7 +25,7 @@ public class LogfileEndpointOptionsTest : BaseTest
     [Fact]
     public void CanOverrideDefaults()
     {
-        var appSettings = new Dictionary<string, string>
+        var appSettings = new Dictionary<string, string?>
         {
             ["management:endpoints:logfile:path"] = "testPath",
             ["management:endpoints:logfile:filePath"] = "logs/application.log"
