@@ -33,6 +33,13 @@ public sealed class LogfileEndpointHandler : ILogfileEndpointHandler
     internal string GetLogFilePath()
     {
         _logger.LogTrace("Getting log file path");
-        return Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly()!.Location)!, _optionsMonitor.CurrentValue.FilePath ?? string.Empty);
+
+        if (!string.IsNullOrEmpty(_optionsMonitor.CurrentValue.FilePath))
+        {
+            return Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly()!.Location)!, _optionsMonitor.CurrentValue.FilePath ?? string.Empty);
+        }
+
+        _logger.LogWarning("File path is not set");
+        return string.Empty;
     }
 }
