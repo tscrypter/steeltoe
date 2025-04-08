@@ -9,7 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Steeltoe.Common.TestResources;
 using Steeltoe.Common.TestResources.IO;
 
-namespace Steeltoe.Management.Endpoint.Test.Actuators.Logfile;
+namespace Steeltoe.Management.Endpoint.Test.Actuators.LogFile;
 
 public sealed class EndpointMiddlewareTest : BaseTest
 {

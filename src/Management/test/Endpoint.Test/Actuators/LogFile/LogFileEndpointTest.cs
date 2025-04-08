@@ -7,10 +7,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Steeltoe.Common.TestResources.IO;
 using Steeltoe.Management.Configuration;
-using Steeltoe.Management.Endpoint.Actuators.Logfile;
+using Steeltoe.Management.Endpoint.Actuators.LogFile;
 using Xunit.Abstractions;
 
-namespace Steeltoe.Management.Endpoint.Test.Actuators.Logfile;
+namespace Steeltoe.Management.Endpoint.Test.Actuators.LogFile;
 
 public sealed class LogFileEndpointTest(ITestOutputHelper testOutputHelper) : BaseTest
 {

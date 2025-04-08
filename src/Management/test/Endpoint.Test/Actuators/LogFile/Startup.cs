@@ -4,9 +4,9 @@
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using Steeltoe.Management.Endpoint.Actuators.Logfile;
+using Steeltoe.Management.Endpoint.Actuators.LogFile;
 
-namespace Steeltoe.Management.Endpoint.Test.Actuators.Logfile;
+namespace Steeltoe.Management.Endpoint.Test.Actuators.LogFile;
 
 public sealed class Startup
 {

@@ -3,9 +3,9 @@
 // See the LICENSE file in the project root for more information.
 
 using Steeltoe.Management.Configuration;
-using Steeltoe.Management.Endpoint.Actuators.Logfile;
+using Steeltoe.Management.Endpoint.Actuators.LogFile;
 
-namespace Steeltoe.Management.Endpoint.Test.Actuators.Logfile;
+namespace Steeltoe.Management.Endpoint.Test.Actuators.LogFile;
 
 public sealed class LogFileEndpointOptionsTest : BaseTest
 {
