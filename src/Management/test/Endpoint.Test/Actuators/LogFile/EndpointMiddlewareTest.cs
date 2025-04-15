@@ -68,8 +68,9 @@ public sealed class EndpointMiddlewareTest : BaseTest
         HttpResponseMessage response = await client.SendAsync(headRequest, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal("text/plain", response.Content.Headers.ContentType?.MediaType);
-        Assert.Equal("utf-8", response.Content.Headers.ContentType?.CharSet);
+        Assert.NotNull(response.Content.Headers.ContentType);
+        Assert.Equal("text/plain", response.Content.Headers.ContentType!.MediaType);
+        Assert.Equal("utf-8", response.Content.Headers.ContentType!.CharSet);
         Assert.Equal("bytes", response.Headers.AcceptRanges.Single());
         Assert.Equal(19, response.Content.Headers.ContentLength);
     }
