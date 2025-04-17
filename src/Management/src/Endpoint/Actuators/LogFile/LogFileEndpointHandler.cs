@@ -26,7 +26,7 @@ internal sealed class LogFileEndpointHandler : ILogFileEndpointHandler
         _logger = loggerFactory.CreateLogger<LogFileEndpointHandler>();
     }
 
-    public async Task<LogFileEndpointResponse> InvokeAsync(LogFileEndpointRequest? argument, CancellationToken cancellationToken)
+    public async Task<LogFileEndpointResponse> InvokeAsync(LogFileEndpointRequest argument, CancellationToken cancellationToken)
     {
         _logger.LogTrace("Invoking {Handler} with argument: {Argument}", nameof(LogFileEndpointHandler), argument);
         cancellationToken.ThrowIfCancellationRequested();
@@ -38,7 +38,7 @@ internal sealed class LogFileEndpointHandler : ILogFileEndpointHandler
             FileInfo logFile = new FileInfo(logFilePath);
             var logFileResult = new LogFileEndpointResponse(await File.ReadAllTextAsync(logFilePath, cancellationToken),
                 logFile.Length,
-                Encoding.Default, // StreamReader.CurrentEncoding is not reliable based on unit tests, so just use default for this .NET implementation
+                logFile.Length,
                 logFile.LastWriteTimeUtc);
             return logFileResult;
         }

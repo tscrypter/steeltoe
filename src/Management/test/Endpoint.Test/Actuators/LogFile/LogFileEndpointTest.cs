@@ -168,7 +168,6 @@ public sealed class LogFileEndpointTest(ITestOutputHelper testOutputHelper) : Ba
 
         var handler = (LogFileEndpointHandler)testContext.GetRequiredService<ILogFileEndpointHandler>();
         var logFileContents = await handler.InvokeAsync(new LogFileEndpointRequest(), TestContext.Current.CancellationToken);
-
         logFileContents.Content.Should().Be(expectedLogFileContents);
     }
 

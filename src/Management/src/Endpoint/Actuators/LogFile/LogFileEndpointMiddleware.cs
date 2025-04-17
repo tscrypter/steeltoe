@@ -30,15 +30,7 @@ internal sealed class LogFileEndpointMiddleware(
 
     protected override async Task WriteResponseAsync(LogFileEndpointResponse response, HttpContext httpContext, CancellationToken cancellationToken)
     {
-        if (response.LogFileEncoding != null)
-        {
-            httpContext.Response.ContentType = $"text/plain; charset={response.LogFileEncoding?.BodyName}";
-        }
-        else
-        {
-            httpContext.Response.ContentType = "text/plain;";
-        }
-
+        httpContext.Response.ContentType = "text/plain";
         httpContext.Response.ContentLength = response.ContentLength;
         httpContext.Response.StatusCode = StatusCodes.Status200OK;
 

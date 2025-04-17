@@ -4,4 +4,4 @@
 
 namespace Steeltoe.Management.Endpoint.Actuators.LogFile;
 
-public interface ILogFileEndpointHandler : IEndpointHandler<LogFileEndpointRequest?, LogFileEndpointResponse>;
+public interface ILogFileEndpointHandler : IEndpointHandler<LogFileEndpointRequest, LogFileEndpointResponse>;

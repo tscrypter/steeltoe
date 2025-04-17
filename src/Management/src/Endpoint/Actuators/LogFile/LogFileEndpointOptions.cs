@@ -13,4 +13,13 @@ public sealed class LogFileEndpointOptions : EndpointOptions
     /// <see cref="System.Reflection.Assembly.GetEntryAssembly()" />.
     /// </summary>
     public string? FilePath { get; set; }
+
+    protected override IList<string> GetDefaultAllowedVerbs()
+    {
+        return new List<string>
+        {
+            "Get",
+            "Head"
+        };
+    }
 }
