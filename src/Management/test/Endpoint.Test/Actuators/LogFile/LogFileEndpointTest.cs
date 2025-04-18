@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Reflection;
+using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Steeltoe.Common.TestResources.IO;
@@ -168,7 +169,9 @@ public sealed class LogFileEndpointTest(ITestOutputHelper testOutputHelper) : Ba
 
         var handler = (LogFileEndpointHandler)testContext.GetRequiredService<ILogFileEndpointHandler>();
         var logFileContents = await handler.InvokeAsync(new LogFileEndpointRequest(), TestContext.Current.CancellationToken);
-        logFileContents.Content.Should().Be(expectedLogFileContents);
+        logFileContents.Content.Should().NotBeNull();
+        var actualContent = await ReadAsyncEnumerableAsString(logFileContents.Content!, Encoding.UTF8, TestContext.Current.CancellationToken);
+        actualContent.Should().Be(expectedLogFileContents);
     }
 
     [Fact]
@@ -195,5 +198,16 @@ public sealed class LogFileEndpointTest(ITestOutputHelper testOutputHelper) : Ba
         var logFileContents = await handler.InvokeAsync(new LogFileEndpointRequest(), TestContext.Current.CancellationToken);
 
         logFileContents.Content.Should().Be(null);
+    }
+    private static async Task<string> ReadAsyncEnumerableAsString(IAsyncEnumerable<byte[]> content, Encoding encoding, CancellationToken cancellationToken = default)
+    {
+        var stringBuilder = new StringBuilder();
+
+        await foreach (var chunk in content.WithCancellation(cancellationToken))
+        {
+            stringBuilder.Append(encoding.GetString(chunk));
+        }
+
+        return stringBuilder.ToString();
     }
 }

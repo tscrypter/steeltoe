@@ -39,13 +39,21 @@ internal sealed class LogFileEndpointMiddleware(
 
             if (response.Content != null)
             {
-                await httpContext.Response.WriteAsync(response.Content, cancellationToken);
+                await WriteAsyncEnumerableToResponseAsync(response.Content, httpContext, cancellationToken);
             }
         }
         else
         {
             httpContext.Response.Headers.AcceptRanges = "bytes";
             httpContext.Response.Headers.LastModified = response.LastModified?.ToString("R", CultureInfo.InvariantCulture);
+        }
+    }
+
+    protected async Task WriteAsyncEnumerableToResponseAsync(IAsyncEnumerable<byte[]> content, HttpContext httpContext, CancellationToken cancellationToken)
+    {
+        await foreach (var chunk in content.WithCancellation(cancellationToken))
+        {
+            await httpContext.Response.Body.WriteAsync(chunk, cancellationToken);
         }
     }
 }

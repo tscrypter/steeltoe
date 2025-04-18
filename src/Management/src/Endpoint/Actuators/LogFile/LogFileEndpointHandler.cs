@@ -36,7 +36,7 @@ internal sealed class LogFileEndpointHandler : ILogFileEndpointHandler
         if (!string.IsNullOrEmpty(logFilePath))
         {
             FileInfo logFile = new FileInfo(logFilePath);
-            var logFileResult = new LogFileEndpointResponse(await File.ReadAllTextAsync(logFilePath, cancellationToken),
+            var logFileResult = new LogFileEndpointResponse(LogFileStreamer.ReadLogFileAsync(logFilePath, cancellationToken),
                 logFile.Length,
                 logFile.Length,
                 logFile.LastWriteTimeUtc);

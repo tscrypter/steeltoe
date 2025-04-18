@@ -6,9 +6,9 @@ using System.Text;
 
 namespace Steeltoe.Management.Endpoint.Actuators.LogFile;
 
-public class LogFileEndpointResponse(string? content, long? contentLength, long? totalFileSize, DateTime? lastModified)
+public class LogFileEndpointResponse(IAsyncEnumerable<byte[]>? content, long? contentLength, long? totalFileSize, DateTime? lastModified)
 {
-    public string? Content { get; } = content;
+    public IAsyncEnumerable<byte[]>? Content { get; } = content;
     public long? ContentLength { get; } = contentLength;
     public long? TotalFileSize { get; } = totalFileSize;
     public DateTime? LastModified { get; } = lastModified;
