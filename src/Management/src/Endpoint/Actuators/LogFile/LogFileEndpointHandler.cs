@@ -35,15 +35,36 @@ internal sealed class LogFileEndpointHandler : ILogFileEndpointHandler
 
         if (!string.IsNullOrEmpty(logFilePath))
         {
-            FileInfo logFile = new FileInfo(logFilePath);
-            var logFileResult = new LogFileEndpointResponse(LogFileStreamer.ReadLogFileAsync(logFilePath, cancellationToken),
-                logFile.Length,
-                logFile.Length,
-                logFile.LastWriteTimeUtc);
+            FileInfo logFileInfo = new FileInfo(logFilePath);
+
+            var logFileResult = argument.RangeStartByte.HasValue
+                ? GetPartialLogFile(logFilePath, logFileInfo, argument.RangeStartByte.Value, argument.RangeLastByte, cancellationToken)
+                : GetEntireLogFile(logFilePath, logFileInfo, cancellationToken);
+
             return logFileResult;
         }
 
         return new LogFileEndpointResponse();
+    }
+
+    private static LogFileEndpointResponse GetPartialLogFile(string logFilePath, FileInfo logFileInfo, long rangeStartByte, long? rangeEndByte, CancellationToken cancellationToken)
+    {
+        return new LogFileEndpointResponse(LogFileStreamer.ReadLogFileAsync(logFilePath, rangeStartByte, rangeEndByte ?? logFileInfo.Length -1, cancellationToken),
+            rangeEndByte.HasValue ? (rangeEndByte - rangeStartByte + 1) : (logFileInfo.Length - rangeStartByte),
+            rangeStartByte,
+            rangeEndByte ?? logFileInfo.Length - 1,
+            logFileInfo.Length,
+            logFileInfo.LastWriteTimeUtc);
+    }
+
+    private static LogFileEndpointResponse GetEntireLogFile(string logFilePath, FileInfo logFileInfo, CancellationToken cancellationToken)
+    {
+        return new LogFileEndpointResponse(LogFileStreamer.ReadLogFileAsync(logFilePath, cancellationToken),
+            logFileInfo.Length,
+            null,
+            null,
+            logFileInfo.Length,
+            logFileInfo.LastWriteTimeUtc);
     }
 
     internal string GetLogFilePath()

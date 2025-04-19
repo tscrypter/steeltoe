@@ -3,9 +3,11 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Globalization;
+using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 using Steeltoe.Management.Endpoint.Configuration;
 using Steeltoe.Management.Endpoint.Middleware;
 
@@ -23,9 +25,26 @@ internal sealed class LogFileEndpointMiddleware(
 
     protected override async Task<LogFileEndpointRequest?> ParseRequestAsync(HttpContext httpContext, CancellationToken cancellationToken)
     {
+        long? rangeStartByte = null;
+        long? rangeLastByte = null;
+        // Extract the Range header from the request if it is present
+        var rangeHeader = httpContext.Request.Headers.Range;
+
+        if (rangeHeader.Count == 1)
+        {
+            RangeHeaderValue rangeHeaderValue = RangeHeaderValue.Parse(rangeHeader[0]!);
+
+            if (rangeHeaderValue.Ranges.Count == 1)
+            {
+                RangeItemHeaderValue range = rangeHeaderValue.Ranges.First();
+                rangeStartByte = range.From;
+                rangeLastByte = range.To;
+            }
+        }
+
         return httpContext.Request.Method.Equals(HttpMethod.Head.Method, StringComparison.OrdinalIgnoreCase)
             ? await Task.FromResult(new LogFileEndpointRequest(null, null, false))
-            : null;
+            : await Task.FromResult(new LogFileEndpointRequest(rangeStartByte, rangeLastByte, true));
     }
 
     protected override async Task WriteResponseAsync(LogFileEndpointResponse response, HttpContext httpContext, CancellationToken cancellationToken)
@@ -36,6 +55,12 @@ internal sealed class LogFileEndpointMiddleware(
 
         if (httpContext.Request.Method.Equals(HttpMethod.Get.Method, StringComparison.OrdinalIgnoreCase))
         {
+            if (response.TotalFileSize != response.ContentLength)
+            {
+                httpContext.Response.Headers.ContentRange =
+                    new ContentRangeHeaderValue(response.RangeStartByte!.Value, response.RangeEndByte!.Value, response.TotalFileSize!.Value).ToString();
+                httpContext.Response.StatusCode = StatusCodes.Status206PartialContent;
+            }
 
             if (response.Content != null)
             {

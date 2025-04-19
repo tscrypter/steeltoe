@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Net;
+using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
@@ -72,5 +73,42 @@ public sealed class EndpointMiddlewareTest : BaseTest
         Assert.Equal("text/plain", response.Content.Headers.ContentType!.MediaType);
         Assert.Equal("bytes", response.Headers.AcceptRanges.Single());
         Assert.Equal(19, response.Content.Headers.ContentLength);
+    }
+
+    [Fact]
+    public async Task LogFileActuator_RequestForValidRange_ReturnsExpectedData()
+    {
+        using var logFile = new TempFile();
+
+        var appSettings = new Dictionary<string, string?>
+        {
+            ["management:endpoints:actuator:exposure:include:0"] = "*",
+            ["management:endpoints:logfile:filePath"] = logFile.FullPath
+        };
+
+        await File.WriteAllBytesAsync(logFile.FullPath, "This is a test log."u8.ToArray(), TestContext.Current.CancellationToken);
+
+        WebHostBuilder builder = TestWebHostBuilderFactory.Create();
+        builder.UseStartup<Startup>();
+        builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(appSettings));
+
+        using IWebHost app = builder.Build();
+        await app.StartAsync(TestContext.Current.CancellationToken);
+
+        using HttpClient client = app.GetTestClient();
+        using HttpRequestMessage getRangeRequest = new HttpRequestMessage(HttpMethod.Get, new Uri("http://localhost/actuator/logfile"));
+        getRangeRequest.Headers.Range = new RangeHeaderValue(0, 3);
+        HttpResponseMessage response = await client.SendAsync(getRangeRequest, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.PartialContent, response.StatusCode);
+        Assert.NotNull(response.Content.Headers.ContentType);
+        Assert.Equal("text/plain", response.Content.Headers.ContentType!.MediaType);
+        Assert.Equal(4, response.Content.Headers.ContentLength);
+        Assert.NotNull(response.Content.Headers.ContentRange);
+        Assert.Equal("bytes", response.Content.Headers.ContentRange.Unit);
+        Assert.Equal(0, response.Content.Headers.ContentRange.From);
+        Assert.Equal(3, response.Content.Headers.ContentRange.To);
+        Assert.True(response.Content.Headers.ContentRange.HasLength);
+        Assert.Equal(19, response.Content.Headers.ContentRange.Length);
     }
 }
