@@ -57,8 +57,8 @@ internal sealed class LogFileEndpointMiddleware(
         {
             if (response.TotalFileSize != response.ContentLength)
             {
-                httpContext.Response.Headers.ContentRange =
-                    new ContentRangeHeaderValue(response.RangeStartByte!.Value, response.RangeEndByte!.Value, response.TotalFileSize!.Value).ToString();
+                // httpContext.Response.Headers.ContentRange =
+                //     new ContentRangeHeaderValue(response.RangeStartByte!.Value, response.RangeEndByte!.Value, response.TotalFileSize!.Value).ToString();
                 httpContext.Response.StatusCode = StatusCodes.Status206PartialContent;
             }
 
@@ -74,7 +74,7 @@ internal sealed class LogFileEndpointMiddleware(
         }
     }
 
-    protected async Task WriteAsyncEnumerableToResponseAsync(IAsyncEnumerable<byte[]> content, HttpContext httpContext, CancellationToken cancellationToken)
+    private static async Task WriteAsyncEnumerableToResponseAsync(IAsyncEnumerable<byte[]> content, HttpContext httpContext, CancellationToken cancellationToken)
     {
         await foreach (var chunk in content.WithCancellation(cancellationToken))
         {

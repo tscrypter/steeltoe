@@ -17,7 +17,7 @@ public sealed class LogFileStreamerTest
         await using var writer = new StreamWriter(testLogFile.FullPath);
         // 12 KB of string data
         var sb = new StringBuilder();
-        for (int i = 0; i < 4096 * 3; i++)
+        for (int i = 0; i < LogFileStreamer.BufferSize * 3; i++)
         {
             sb.Append((char)('a' + (i % 26)));
         }
@@ -25,14 +25,16 @@ public sealed class LogFileStreamerTest
         await writer.FlushAsync();
 
         var chunks = new List<byte[]>();
-
+        int numChunks = 0;
         await foreach (var chunk in LogFileStreamer.ReadLogFileAsync(testLogFile.FullPath, TestContext.Current.CancellationToken))
         {
             chunks.Add(chunk);
+            numChunks++;
         }
 
         string result = string.Concat(chunks.Select(Encoding.UTF8.GetString));
         result.Should().Be(sb.ToString());
+        numChunks.Should().Be(3);
     }
 
     [Fact]
@@ -42,7 +44,7 @@ public sealed class LogFileStreamerTest
         await using var writer = new StreamWriter(testLogFile.FullPath);
         // 12 KB of string data
         var sb = new StringBuilder();
-        for (int i = 0; i < 4096 * 3; i++)
+        for (int i = 0; i < LogFileStreamer.BufferSize * 3; i++)
         {
             sb.Append((char)('a' + (i % 26)));
         }
@@ -67,7 +69,7 @@ public sealed class LogFileStreamerTest
         await using var writer = new StreamWriter(testLogFile.FullPath);
         // 12 KB of string data
         var sb = new StringBuilder();
-        for (int i = 0; i < 4096 * 3; i++)
+        for (int i = 0; i < LogFileStreamer.BufferSize * 3; i++)
         {
             sb.Append((char)('a' + (i % 26)));
         }
@@ -83,5 +85,24 @@ public sealed class LogFileStreamerTest
 
         string result = string.Concat(chunks.Select(Encoding.UTF8.GetString));
         result.Should().Be(sb.ToString()[1025..1027]);
+    }
+
+    [Fact]
+    public async Task ReadLogFileAsync_ThrowsIOException_WhenFileNotFound()
+    {
+        string nonExistentFilePath = Path.Combine(Path.GetTempPath(), "nonexistent.log");
+
+        try
+        {
+            await foreach(var chunk in LogFileStreamer.ReadLogFileAsync(nonExistentFilePath, TestContext.Current.CancellationToken))
+            {
+                // This block should not be reached
+            }
+            Assert.Fail();
+        }
+        catch (FileNotFoundException ex)
+        {
+            ex.Should().NotBe(null);
+        }
     }
 }

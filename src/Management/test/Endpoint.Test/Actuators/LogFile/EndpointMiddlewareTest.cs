@@ -111,4 +111,39 @@ public sealed class EndpointMiddlewareTest : BaseTest
         Assert.True(response.Content.Headers.ContentRange.HasLength);
         Assert.Equal(19, response.Content.Headers.ContentRange.Length);
     }
+
+    [Fact]
+    public async Task LogFileActuator_RequestForInvalidRange_ReturnsRangeNotSatisfiable()
+    {
+        using var logFile = new TempFile();
+
+        var appSettings = new Dictionary<string, string?>
+        {
+            ["management:endpoints:actuator:exposure:include:0"] = "*",
+            ["management:endpoints:logfile:filePath"] = logFile.FullPath
+        };
+
+        WebHostBuilder builder = TestWebHostBuilderFactory.Create();
+        builder.UseStartup<Startup>();
+        builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(appSettings));
+
+        using IWebHost app = builder.Build();
+        await app.StartAsync(TestContext.Current.CancellationToken);
+
+        using HttpClient client = app.GetTestClient();
+        using HttpRequestMessage getRangeRequest = new HttpRequestMessage(HttpMethod.Get, new Uri("http://localhost/actuator/logfile"));
+        // Requesting a range with a start byte greater than the end byte
+        getRangeRequest.Headers.Add("Range", "bytes=0-4");
+        HttpResponseMessage response = await client.SendAsync(getRangeRequest, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.RequestedRangeNotSatisfiable, response.StatusCode);
+        Assert.NotNull(response.Content.Headers.ContentType);
+        Assert.Equal("text/plain", response.Content.Headers.ContentType!.MediaType);
+        Assert.NotNull(response.Content.Headers.ContentRange);
+        Assert.Equal("bytes", response.Content.Headers.ContentRange.Unit);
+        Assert.Equal(0, response.Content.Headers.ContentRange.From);
+        Assert.Equal(3, response.Content.Headers.ContentRange.To);
+        Assert.True(response.Content.Headers.ContentRange.HasLength);
+        Assert.Equal(19, response.Content.Headers.ContentRange.Length);
+    }
 }

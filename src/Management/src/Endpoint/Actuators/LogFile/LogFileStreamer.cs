@@ -8,10 +8,12 @@ namespace Steeltoe.Management.Endpoint.Actuators.LogFile;
 
 internal static class LogFileStreamer
 {
+    internal const int BufferSize = 4096;
+
     public static async IAsyncEnumerable<byte[]> ReadLogFileAsync(string fullPath, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        await using var fileStream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, useAsync: true);
-        byte[] buffer = new byte[4096];
+        await using var fileStream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, BufferSize, useAsync: true);
+        byte[] buffer = new byte[BufferSize];
         int bytesRead;
 
         while ((bytesRead = await fileStream.ReadAsync(buffer, cancellationToken)) > 0)
@@ -22,8 +24,8 @@ internal static class LogFileStreamer
 
     public static async IAsyncEnumerable<byte[]> ReadLogFileAsync(string fullPath, int startIndex, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        await using var fileStream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, useAsync: true);
-        byte[] buffer = new byte[4096];
+        await using var fileStream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, BufferSize, useAsync: true);
+        byte[] buffer = new byte[BufferSize];
         int bytesRead;
         // Seek to the start index
         fileStream.Seek(startIndex, SeekOrigin.Begin);
@@ -37,8 +39,8 @@ internal static class LogFileStreamer
     public static async IAsyncEnumerable<byte[]> ReadLogFileAsync(string fullPath, long startIndex, long endIndex,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        await using var fileStream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, useAsync: true);
-        byte[] buffer = new byte[4096];
+        await using var fileStream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, BufferSize, useAsync: true);
+        byte[] buffer = new byte[BufferSize];
         int bytesRead;
         int remainingBytes = (int)(endIndex - startIndex);
 
